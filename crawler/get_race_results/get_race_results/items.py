@@ -7,7 +7,5 @@ import scrapy
 
 
 class GetRaceResultsItem(scrapy.Item):
-    # define the fields for your item here like:
-    # name = scrapy.Field()
-    race_title = scrapy.Field()
-    race_result = scrapy.Field()
+    race_info = scrapy.Field()
+    race_results = scrapy.Field()
