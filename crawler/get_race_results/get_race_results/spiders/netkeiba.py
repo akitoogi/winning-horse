@@ -43,4 +43,4 @@ class NetkeibaSpider(scrapy.Spider):
 
         next_game = response.xpath('//*[@class="RaceNumWrap"]/ul/li[@class="Active"]/following-sibling::li/a/@href').get()
         next_game_url = "https://race.netkeiba.com/race/result.html" + next_game
-        
+        yield scrapy.Request(next_game_url)
