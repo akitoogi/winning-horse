@@ -5,7 +5,7 @@ from ..items import GetRaceResultsItem
 
 class NetkeibaSpider(scrapy.Spider):
     name = 'netkeiba'
-    allowed_domains = ['https://race.netkeiba.com']
+    allowed_domains = ['race.netkeiba.com']
     start_urls = ['https://race.netkeiba.com/race/result.html?race_id=202008040401']
 
     def parse(self, response):
