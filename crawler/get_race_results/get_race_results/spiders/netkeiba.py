@@ -6,7 +6,11 @@ from ..items import GetRaceResultsItem
 class NetkeibaSpider(scrapy.Spider):
     name = 'netkeiba'
     allowed_domains = ['race.netkeiba.com']
-    start_urls = ['https://race.netkeiba.com/race/result.html?race_id=202008040401']
+
+    def start_requests(self):
+        yield scrapy.Request('https://race.netkeiba.com/race/result.html?race_id=202008040101', self.parse)
+        yield scrapy.Request('https://race.netkeiba.com/race/result.html?race_id=202005040101', self.parse)
+        yield scrapy.Request('https://race.netkeiba.com/race/result.html?race_id=202004040101', self.parse)
 
     def parse(self, response):
         #raceの結果を取得する。
@@ -37,10 +41,12 @@ class NetkeibaSpider(scrapy.Spider):
             race_result_dict['weight_diff'] = race_result.xpath('string(td[15]/small)').get().strip()
             
             race_result_list.append(race_result_dict)
-        yield{
+        
+        yield {
             "race_results": race_result_list
             }
 
         next_game = response.xpath('//*[@class="RaceNumWrap"]/ul/li[@class="Active"]/following-sibling::li/a/@href').get()
-        next_game_url = "https://race.netkeiba.com/race/result.html" + next_game
-        yield scrapy.Request(next_game_url)
+        if next_game:
+            next_game_url = "https://race.netkeiba.com/race/result.html" + next_game
+            yield scrapy.Request(next_game_url)
