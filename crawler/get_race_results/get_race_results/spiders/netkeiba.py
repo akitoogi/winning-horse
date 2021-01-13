@@ -8,12 +8,18 @@ class NetkeibaSpider(scrapy.Spider):
     allowed_domains = ['race.netkeiba.com']
 
     def start_requests(self):
-        yield scrapy.Request('https://race.netkeiba.com/race/result.html?race_id=202008040101', self.parse)
-        yield scrapy.Request('https://race.netkeiba.com/race/result.html?race_id=202005040101', self.parse)
-        yield scrapy.Request('https://race.netkeiba.com/race/result.html?race_id=202004040101', self.parse)
+        yield scrapy.Request('https://race.netkeiba.com/race/result.html?race_id=202106010101', self.parse)
 
     def parse(self, response):
-        #raceの結果を取得する。
+        #obtain race information
+        race_info_list = []
+        race_info_a = response.xpath('//div[@class="RaceData01"]').get()
+        race_info_b = response.xpath('//div[@class="RaceData02"]').get()
+        race_info_list.append(race_info_a)
+        race_info_list.append(race_info_b)
+
+
+        #obtain race result
         race_result_list = []
         for race_result in response.xpath('//*[@id="All_Result_Table"]/tbody/tr'):
             race_result_dict = {}
@@ -43,10 +49,17 @@ class NetkeibaSpider(scrapy.Spider):
             race_result_list.append(race_result_dict)
         
         yield {
+            "race_info": race_info_list,
             "race_results": race_result_list
             }
 
         next_game = response.xpath('//*[@class="RaceNumWrap"]/ul/li[@class="Active"]/following-sibling::li/a/@href').get()
+        next_place = response.xpath('//div[@class="RaceKaisaiWrap"]/ul/li[@class="Active"]/following-sibling::li/a/@href').get()
+
         if next_game:
             next_game_url = "https://race.netkeiba.com/race/result.html" + next_game
             yield scrapy.Request(next_game_url)
+        elif next_place:
+            next_game_url = "https://race.netkeiba.com/race/result.html" + next_place[:-2] + '01'
+            yield scrapy.Request(next_game_url)
+            
