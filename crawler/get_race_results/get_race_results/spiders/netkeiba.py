@@ -8,18 +8,28 @@ class NetkeibaSpider(scrapy.Spider):
     allowed_domains = ['race.netkeiba.com']
 
     def start_requests(self):
-        yield scrapy.Request('https://race.netkeiba.com/race/result.html?race_id=202106010101', self.parse)
+        with open('start_url_list.txt') as f:
+            for url in f:
+                yield scrapy.Request(url.rstrip(), self.parse)
 
     def parse(self, response):
-        #obtain race information
+        #raceの情報を取得する。
         race_info_list = []
-        race_info_a = response.xpath('//div[@class="RaceData01"]').get()
-        race_info_b = response.xpath('//div[@class="RaceData02"]').get()
-        race_info_list.append(race_info_a)
-        race_info_list.append(race_info_b)
-
-
-        #obtain race result
+        race_info_dict = {}
+        race_info_dict['name'] = response.xpath('//*[@class="RaceList_Item02"]/div/text()').get().strip()
+        race_info_dict['time'] = response.xpath('//*[@class="RaceData01"]/text()[1]').get().strip()[:-2]
+        race_info_dict['course'] = response.xpath('//*[@class="RaceData01"]/span[1]/text()').get().strip()
+        race_info_dict['direction'] = response.xpath('//*[@class="RaceData01"]/text()[2]').get().strip()[1:2]
+        race_info_dict['whether'] = response.xpath('//*[@class="RaceData01"]/text()[2]').get().strip()[-1:]
+        race_info_dict['ground'] = response.xpath('//*[@class="RaceData01"]/span[3]/text()').get().strip()[-1:]
+        race_info_dict['place'] = response.xpath('//*[@class="RaceData02"]/span[2]/text()').get().strip()
+        race_info_dict['status'] = response.xpath('//*[@class="RaceData02"]/span[5]/text()').get().strip()
+        race_info_dict['sex'] = response.xpath('//*[@class="RaceData02"]/span[6]/text()').get().strip()
+        race_info_dict['age'] = response.xpath('//*[@class="RaceData02"]/span[7]/text()').get().strip()
+        race_info_dict['number'] = response.xpath('//*[@class="RaceData02"]/span[8]/text()').get().strip()[:-1]
+        race_info_list.append(race_info_dict)
+        
+        #raceの結果を取得する。
         race_result_list = []
         for race_result in response.xpath('//*[@id="All_Result_Table"]/tbody/tr'):
             race_result_dict = {}
@@ -55,11 +65,9 @@ class NetkeibaSpider(scrapy.Spider):
 
         next_game = response.xpath('//*[@class="RaceNumWrap"]/ul/li[@class="Active"]/following-sibling::li/a/@href').get()
         next_place = response.xpath('//div[@class="RaceKaisaiWrap"]/ul/li[@class="Active"]/following-sibling::li/a/@href').get()
-
         if next_game:
             next_game_url = "https://race.netkeiba.com/race/result.html" + next_game
             yield scrapy.Request(next_game_url)
         elif next_place:
             next_game_url = "https://race.netkeiba.com/race/result.html" + next_place[:-2] + '01'
             yield scrapy.Request(next_game_url)
-            
